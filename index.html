@@ -12,16 +12,35 @@
     
     <!-- Campo de entrada para número -->
     <div class="mb-3">
-      <label for="inputNumber" class="form-label">Digite a quantidade de números a gerar:</label>
+      <label for="inputNumber" class="form-label">Quantos processos:</label>
       <input type="number" class="form-control" id="inputNumber" placeholder="Ex: 10" min="1">
     </div>
 
-    <!-- Container para o botão de gerar e campo de entrada manual -->
+
     <div class="row mb-3">
-      <!-- Botão de gerar automaticamente -->
       <div class="col-md-6">
-        <button id="generateBtn" class="btn btn-primary w-100">Gerar números automaticamente</button>
+        <button id="generateBtn" class="btn btn-primary w-100">Gerar automaticamente</button>
       </div>
+
+
+      <div class="container mt-5">
+        <table class="table table-striped table-bordered">
+          <thead class="table-dark">
+            <tr>
+                <th>Processo</th>
+                <th>Tempo de Surto</th>
+                <th>Prioridade</th>
+                <th>Tempo de Chegada</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaRR">
+
+
+        </tbody>
+
+        </table>
+      </div>
+      
 
       <!-- Campo para inserir números manualmente -->
       <div class="col-md-6 d-flex">
