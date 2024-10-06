@@ -1,6 +1,6 @@
 class Processo {
 
-  constructor(numProcesso, surtoP, prioridadeP, chegadaP){
+  constructor(numProcesso, surtoP, prioridadeP, chegadaP) {
     this.numProcesso = numProcesso;
     this.surtoP = surtoP;
     this.prioridadeP = prioridadeP;
@@ -25,7 +25,7 @@ function generateNumbers(quantProcessos) {
   chegada = [];
 
   for (let i = 0; i < quantProcessos; i++) {
-    surto.push(Math.floor(Math.random() * 50));
+    surto.push(Math.floor(Math.random() * 50) + 5);
     prioridade.push(Math.floor(Math.random() * quantProcessos) + 1);
     chegada.push(Math.floor(Math.random() * (quantProcessos * 1.5)));
   }
@@ -42,18 +42,19 @@ document.getElementById('generateBtn').addEventListener('click', function () {
     generateNumbers(quantProcessos);
     document.getElementById('quantum').textContent = quantum;
     renderRoundRobinTable(quantProcessos)
+    mostraTabela()
   }
 });
 
 function renderRoundRobinTable(quantProcessos) {
   const tabelaRR = document.getElementById('tabelaRR');
   tabelaRR.innerHTML = '';
-  let processos = [] 
+  let processos = []
 
   for (let i = 0; i < quantProcessos; i++) {
-    const rowRR = renderRows((i+1), surto[i], prioridade[i], chegada[i]);
+    const rowRR = renderRows((i + 1), surto[i], prioridade[i], chegada[i]);
     tabelaRR.appendChild(rowRR);
-    let p = new Processo((i+1), surto[i], prioridade[i], chegada[i]);
+    let p = new Processo((i + 1), surto[i], prioridade[i], chegada[i]);
     processos.push(p);
   }
   roundRobin(processos);
@@ -69,6 +70,11 @@ function renderRows(numProcesso, surtoP, prioridadeP, chegadaP) {
   `;
 
   return row;
+}
+
+function mostraTabela() {
+  const table = document.querySelector('.div-table');
+  table.style.display = 'block';
 }
 
 
@@ -89,16 +95,16 @@ function sortProcessosPorChegada(processos) {
   });
 }
 
-function somaTempoSurto(processos){
+function somaTempoSurto(processos) {
   let somatorioTempoSurto = 0;
-  for(let i = 0; i<processos.length; i++){
+  for (let i = 0; i < processos.length; i++) {
     somatorioTempoSurto += processos[i].surtoP;
   }
   return somatorioTempoSurto;
 }
 
 function popularListaComProcessos(listaExecucaoProcessos, processosOrdenados) {
-  for(let i=0; i<processosOrdenados.length; i++){
+  for (let i = 0; i < processosOrdenados.length; i++) {
     listaExecucaoProcessos.set(processosOrdenados[i], []);
   }
   return listaExecucaoProcessos;
@@ -108,7 +114,7 @@ function adicionarValor(listaExecucaoProcessos, processo, passo) {
   listaExecucaoProcessos.get(processo).push(passo);
 }
 
-function roundRobin(processos){
+function roundRobin(processos) {
   let PassoComAnterior = 0;
   let somatorioTemposSurto = 0;
   somatorioTemposSurto = somaTempoSurto(processos);
@@ -116,20 +122,23 @@ function roundRobin(processos){
   processosOrdenados = sortProcessosPorChegada(processos);
 
   let listaExecucaoProcessos = new Map();
+
+  listaExecucaoProcessos.clear();
+
   listaExecucaoProcessos = popularListaComProcessos(listaExecucaoProcessos, processosOrdenados);
 
-  while(somatorioTemposSurto != 0){
-    for(let i = 0; i<processosOrdenados.length; i++){
+  while (somatorioTemposSurto != 0) {
+    for (let i = 0; i < processosOrdenados.length; i++) {
       let tempoSurtoRestante = processosOrdenados[i].surtoP - quantum;
-      
-      if(processosOrdenados[i].surtoP == 0){
+
+      if (processosOrdenados[i].surtoP == 0) {
         adicionarValor(listaExecucaoProcessos, processosOrdenados[i], processosOrdenados[i].surtoP);
-      } else if(tempoSurtoRestante < 0){
+      } else if (tempoSurtoRestante < 0) {
         tempoSurtoRestante = 0;
         somatorioTemposSurto -= processosOrdenados[i].surtoP;
         PassoComAnterior += processosOrdenados[i].surtoP
         adicionarValor(listaExecucaoProcessos, processosOrdenados[i], PassoComAnterior);
-        processosOrdenados[i].surtoP = 0; 
+        processosOrdenados[i].surtoP = 0;
       } else {
         somatorioTemposSurto -= quantum;
         processosOrdenados[i].surtoP -= quantum;
@@ -143,26 +152,29 @@ function roundRobin(processos){
   mostraTimeline()
 }
 
-function testa(listaExecucaoP){
+function testa(listaExecucaoP) {
   listaExecucaoP.forEach((valor, chave) => {
     console.log('Processo: ', chave.numProcesso, 'tempo de surto executado por execução: ', valor);
   });
 }
 
-function renderTimeline(listaExecucaoP, processo){
+function renderTimeline(listaExecucaoP, processo) {
   const ol = document.getElementById('historias');
   const tamanhoArray = listaExecucaoP.get(processo).length;
+  ol.innerHTML = '';
 
-  for(let i=0; i<tamanhoArray;i++){
+  for (let i = 0; i < tamanhoArray; i++) {
     listaExecucaoP.forEach((valor, chave) => {
-      const timeElement = renderProcessos(chave.numProcesso, valor[i]);
-      ol.appendChild(timeElement);
+      if (valor[i] != 0) {
+        const timeElement = renderProcessos(chave.numProcesso, valor[i]);
+        ol.appendChild(timeElement);
+      }
     });
   }
 
 }
 
-function renderProcessos(numProcesso, final){
+function renderProcessos(numProcesso, final) {
   const li = document.createElement('li');
 
   li.innerHTML = `
@@ -175,7 +187,7 @@ function renderProcessos(numProcesso, final){
   return li;
 }
 
-function mostraTimeline(){
+function mostraTimeline() {
   const timelineSection = document.querySelector('.timeline');
   timelineSection.style.display = 'block';
 }
@@ -186,32 +198,139 @@ function mostraTimeline(){
 
 
 
+(function () {
+  // VARIABLES
+  const timeline = document.querySelector(".timeline ol"),
+    elH = document.querySelectorAll(".timeline li > div"),
+    arrows = document.querySelectorAll(".timeline .arrows .arrow"),
+    arrowPrev = document.querySelector(".timeline .arrows .arrow__prev"),
+    arrowNext = document.querySelector(".timeline .arrows .arrow__next"),
+    firstItem = document.querySelector(".timeline li:first-child"),
+    lastItem = document.querySelector(".timeline li:last-child"),
+    xScrolling = 280,
+    disabledClass = "disabled";
 
+  // START
+  window.addEventListener("load", init);
 
-
-
-
-// Função para aplicar números manuais
-document.getElementById('applyManualBtn').addEventListener('click', function () {
-  let manualInput = document.getElementById('manualInput').value;
-  let count = document.getElementById('inputNumber').value;
-
-  // Limpa a mensagem de erro, se houver
-  document.getElementById('errorMessage').classList.add('d-none');
-
-  // Verifica se a quantidade inserida manualmente é igual ao número selecionado e se não há números negativos
-  let manualNumbers = manualInput.split(',').map(num => num.trim());
-  let containsNegative = manualNumbers.some(num => num < 0);
-
-  if (manualNumbers.length != count || containsNegative) {
-    // Mostra a mensagem de erro se a quantidade for diferente ou se houver números negativos
-    document.getElementById('errorMessage').classList.remove('d-none');
-  } else {
-    // Limpa o campo de números gerados
-    document.getElementById('generatedNumbers').value = "";
-
-    // Exibe os números manuais no campo de números gerados
-    document.getElementById('generatedNumbers').value = manualInput;
-    document.getElementById('generatedNumbersToggle').style.display = 'block';
+  function init() {
+    setEqualHeights(elH);
+    animateTl(xScrolling, arrows, timeline);
+    setSwipeFn(timeline, arrowPrev, arrowNext);
+    setKeyboardFn(arrowPrev, arrowNext);
   }
-});
+
+  // SET EQUAL HEIGHTS
+  function setEqualHeights(el) {
+    let counter = 0;
+    for (let i = 0; i < el.length; i++) {
+      const singleHeight = el[i].offsetHeight;
+
+      if (counter < singleHeight) {
+        counter = singleHeight;
+      }
+    }
+
+    for (let i = 0; i < el.length; i++) {
+      el[i].style.height = `${counter}px`;
+    }
+  }
+
+  // CHECK IF AN ELEMENT IS IN VIEWPORT
+  // http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+  function isElementInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <=
+      (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+
+  // SET STATE OF PREV/NEXT ARROWS
+  function setBtnState(el, flag = true) {
+    if (flag) {
+      el.classList.add(disabledClass);
+    } else {
+      if (el.classList.contains(disabledClass)) {
+        el.classList.remove(disabledClass);
+      }
+      el.disabled = false;
+    }
+  }
+
+  // ANIMATE TIMELINE
+  function animateTl(scrolling, el, tl) {
+    let counter = 0;
+    for (let i = 0; i < el.length; i++) {
+      el[i].addEventListener("click", function () {
+        if (!arrowPrev.disabled) {
+          arrowPrev.disabled = true;
+        }
+        if (!arrowNext.disabled) {
+          arrowNext.disabled = true;
+        }
+        const sign = this.classList.contains("arrow__prev") ? "" : "-";
+
+
+        if (counter === 0) {
+          tl.style.transform = `translateX(-${scrolling}px)`;
+        } else {
+          const tlStyle = getComputedStyle(tl);
+          // add more browser prefixes if needed here
+          const tlTransformWebkit = tlStyle.getPropertyValue("-webkit-transform");
+          const tlTransformMoz = tlStyle.getPropertyValue("-moz-transform");
+          const tlTransform = tlStyle.getPropertyValue("transform");
+
+          const transformValue = tlTransformWebkit || tlTransformMoz || tlTransform;
+
+
+          const values = parseInt(transformValue.split(",")[4]) + parseInt(`${sign}${scrolling}`);
+
+          tl.style.transform = `translateX(${values}px)`;
+          tl.style.webkitTransform = `translateX(${values}px)`; // Para Safari
+          tl.style.mozTransform = `translateX(${values}px)`; // Para Firefox
+        }
+
+        setTimeout(() => {
+          isElementInViewport(firstItem)
+            ? setBtnState(arrowPrev)
+            : setBtnState(arrowPrev, false);
+          isElementInViewport(lastItem)
+            ? setBtnState(arrowNext)
+            : setBtnState(arrowNext, false);
+        }, 1100);
+
+        counter++;
+      });
+    }
+  }
+
+  // ADD SWIPE SUPPORT FOR TOUCH DEVICES
+  function setSwipeFn(tl, prev, next) {
+    const hammer = new Hammer(tl);
+    hammer.on("swipeleft", () => next.click());
+    hammer.on("swiperight", () => prev.click());
+  }
+
+  // ADD BASIC KEYBOARD FUNCTIONALITY
+  function setKeyboardFn(prev, next) {
+    document.addEventListener("keydown", (e) => {
+      if (e.which === 37 || e.which === 39) {
+        const timelineOfTop = timeline.offsetTop;
+        const y = window.pageYOffset;
+        if (timelineOfTop !== y) {
+          window.scrollTo(0, timelineOfTop);
+        }
+        if (e.which === 37) {
+          prev.click();
+        } else if (e.which === 39) {
+          next.click();
+        }
+      }
+    });
+  }
+})();
+
