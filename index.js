@@ -9,7 +9,6 @@ class Processo {
 
 }
 
-
 // Função para gerar números aleatórios
 let surto = [], prioridade = [], chegada = [], quantum, media;
 
@@ -80,37 +79,105 @@ function renderRows(numProcesso, surtoP, prioridadeP, chegadaP) {
 //INSTANCIA DE PROCESSO
 
 function sortProcessosPorChegada(processos) {
-  return processos.sort((a, b) => a.chegadaP - b.chegadaP);
+  return processos.sort((a, b) => {
+    // Primeiro ordena pelo tempo de chegada
+    if (a.chegadaP !== b.chegadaP) {
+      return a.chegadaP - b.chegadaP;
+    }
+    // Se o tempo de chegada for igual, ordena pela prioridade
+    return a.prioridadeP - b.prioridadeP;
+  });
 }
 
 function somaTempoSurto(processos){
+  let somatorioTempoSurto = 0;
   for(let i = 0; i<processos.length; i++){
-    somaTempoSurto += processos[i].surtoP;
+    somatorioTempoSurto += processos[i].surtoP;
   }
-  return somaTempoSurto;
+  return somatorioTempoSurto;
+}
+
+function popularListaComProcessos(listaExecucaoProcessos, processosOrdenados) {
+  for(let i=0; i<processosOrdenados.length; i++){
+    listaExecucaoProcessos.set(processosOrdenados[i], []);
+  }
+  return listaExecucaoProcessos;
+}
+
+function adicionarValor(listaExecucaoProcessos, processo, passo) {
+  listaExecucaoProcessos.get(processo).push(passo);
 }
 
 function roundRobin(processos){
-  let somaTempoSurto = 0;
-  somaTempoSurto = somaTempoSurto(processos);
+  let PassoComAnterior = 0;
+  let somatorioTemposSurto = 0;
+  somatorioTemposSurto = somaTempoSurto(processos);
   let processosOrdenados = [];
   processosOrdenados = sortProcessosPorChegada(processos);
 
-  while(somaTempoSurto != 0){
+  let listaExecucaoProcessos = new Map();
+  listaExecucaoProcessos = popularListaComProcessos(listaExecucaoProcessos, processosOrdenados);
+
+  while(somatorioTemposSurto != 0){
     for(let i = 0; i<processosOrdenados.length; i++){
       let tempoSurtoRestante = processosOrdenados[i].surtoP - quantum;
       
-      if(tempoSurtoRestante < 0){
+      if(processosOrdenados[i].surtoP == 0){
+        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], processosOrdenados[i].surtoP);
+      } else if(tempoSurtoRestante < 0){
         tempoSurtoRestante = 0;
-        somaTempoSurto -= processosOrdenados[i].surtoP;
-        processosOrdenados[i].surtoP = 0;
+        somatorioTemposSurto -= processosOrdenados[i].surtoP;
+        PassoComAnterior += processosOrdenados[i].surtoP
+        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], PassoComAnterior);
+        processosOrdenados[i].surtoP = 0; 
       } else {
-        somaTempoSurto -= quantum;
+        somatorioTemposSurto -= quantum;
         processosOrdenados[i].surtoP -= quantum;
+        PassoComAnterior += quantum;
+        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], PassoComAnterior);
       }
-      processosOrdenados[i].surtoP = tempoSurtoRestante;
     }
   }
+
+  renderTimeline(listaExecucaoProcessos, processos[0])
+  mostraTimeline()
+}
+
+function testa(listaExecucaoP){
+  listaExecucaoP.forEach((valor, chave) => {
+    console.log('Processo: ', chave.numProcesso, 'tempo de surto executado por execução: ', valor);
+  });
+}
+
+function renderTimeline(listaExecucaoP, processo){
+  const ol = document.getElementById('historias');
+  const tamanhoArray = listaExecucaoP.get(processo).length;
+
+  for(let i=0; i<tamanhoArray;i++){
+    listaExecucaoP.forEach((valor, chave) => {
+      const timeElement = renderProcessos(chave.numProcesso, valor[i]);
+      ol.appendChild(timeElement);
+    });
+  }
+
+}
+
+function renderProcessos(numProcesso, final){
+  const li = document.createElement('li');
+
+  li.innerHTML = `
+      <div class="d-flex flex-column align-items-start">
+          <time class="h5 fw-bold">Processo ${numProcesso}</time>
+          <span>${final}</span>
+      </div>
+  `;
+
+  return li;
+}
+
+function mostraTimeline(){
+  const timelineSection = document.querySelector('.timeline');
+  timelineSection.style.display = 'block';
 }
 
 
