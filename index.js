@@ -11,6 +11,16 @@ class Processo {
 
 // Função para gerar números aleatórios
 let surto = [], prioridade = [], chegada = [], quantum, media;
+const container = document.getElementById('dynamicFormContainer');
+const tabelaRR = document.getElementById('tabelaRR');
+const timelineSection = document.querySelector('.timeline');
+const informacaoProcessos = document.querySelector('.div-table');
+let processos = []
+
+function instanciaProcesso(numProcesso, tempoSurto, prioridade, horaChegada){
+  let p = new Processo(numProcesso, tempoSurto, prioridade, horaChegada);
+  processos.push(p);
+}
 
 
 function calcularMedia(surtos) {
@@ -35,6 +45,9 @@ function generateNumbers(quantProcessos) {
 }
 
 document.getElementById('generateBtn').addEventListener('click', function () {
+  container.innerHTML = '';
+  document.getElementById('submitProcesses').style.display = 'none';
+  
 
   let quantProcessos = document.getElementById('inputNumber').value;
 
@@ -46,19 +59,88 @@ document.getElementById('generateBtn').addEventListener('click', function () {
   }
 });
 
-function renderRoundRobinTable(quantProcessos) {
-  const tabelaRR = document.getElementById('tabelaRR');
+document.getElementById('addManualBtn').addEventListener('click', function() {
   tabelaRR.innerHTML = '';
-  let processos = []
+  document.querySelector('.div-table').style.display = 'none';
+  document.querySelector('.timeline').style.display = 'none';
+  let quantProcessos = document.getElementById('inputNumber').value;
+  if (quantProcessos > 0) {
+      // Adiciona os campos para os processos
+      
+      container.innerHTML = ''; // Limpa o conteúdo anterior
+
+      container.innerHTML += `
+          <div class="row mt-2">
+            <div class="col-md-2">
+              <p>Quantum: </p>
+            </div>
+            <div class="col-md-4">
+              <input type="number" class="form-control" id="quantumP" required>
+            </div>
+          </div>`;
+      for (let i = 0; i < quantProcessos; i++) {
+          container.innerHTML += `
+            <div class="row mt-2">
+              <h5 class="mt-2">Processo ${i + 1}</h5>
+              <div class="col-md-4">
+                <label for="surto${i}" class="form-label">Tempo de Surto:</label>
+                <input type="number" class="form-control" id="surto${i}" required>
+              </div>
+              <div class="col-md-4">
+                <label for="prioridade${i}" class="form-label">Prioridade:</label>
+                <input type="number" class="form-control" id="prioridade${i}" required>
+              </div>
+              <div class="col-md-4 ">
+                <label for="chegada${i}" class="form-label">Tempo de Chegada:</label>
+                <input type="number" class="form-control" id="chegada${i}" required>
+              </div>
+            </div>
+          `;
+      }
+      // Exibe o botão de submeter processos
+      document.getElementById('submitProcesses').style.display = 'block';
+  }
+});
+
+document.getElementById('submitProcesses').addEventListener('click', function() {
+  let quantProcessos = document.getElementById('inputNumber').value;
+  surto = [];
+  prioridade = [];
+  chegada = [];
+
+  for (let i = 0; i < quantProcessos; i++) {
+      const surtoValue = document.getElementById(`surto${i}`).value;
+      const prioridadeValue = document.getElementById(`prioridade${i}`).value;
+      const chegadaValue = document.getElementById(`chegada${i}`).value;
+
+      // Adiciona os valores ao array
+      surto.push(Number(surtoValue));
+      prioridade.push(Number(prioridadeValue));
+      chegada.push(Number(chegadaValue));
+  }
+
+  quantum = Number(document.getElementById('quantumP').value);
+  document.getElementById('quantum').textContent = quantum;
+
+  renderRoundRobinTable(quantProcessos);
+  mostraTabela();
+  container.innerHTML = '';
+  document.getElementById('submitProcesses').style.display = 'none';
+
+});
+
+function renderRoundRobinTable(quantProcessos) {
+  tabelaRR.innerHTML = '';
 
   for (let i = 0; i < quantProcessos; i++) {
     const rowRR = renderRows((i + 1), surto[i], prioridade[i], chegada[i]);
     tabelaRR.appendChild(rowRR);
-    let p = new Processo((i + 1), surto[i], prioridade[i], chegada[i]);
-    processos.push(p);
+    instanciaProcesso((i + 1), surto[i], prioridade[i], chegada[i]);
   }
   roundRobin(processos);
 }
+
+
 
 function renderRows(numProcesso, surtoP, prioridadeP, chegadaP) {
   const row = document.createElement('tr');
@@ -115,7 +197,7 @@ function adicionarValor(listaExecucaoProcessos, processo, passo) {
 }
 
 function roundRobin(processos) {
-  let PassoComAnterior = 0;
+  let passoComAnterior = 0;
   let somatorioTemposSurto = 0;
   somatorioTemposSurto = somaTempoSurto(processos);
   let processosOrdenados = [];
@@ -136,15 +218,17 @@ function roundRobin(processos) {
       } else if (tempoSurtoRestante < 0) {
         tempoSurtoRestante = 0;
         somatorioTemposSurto -= processosOrdenados[i].surtoP;
-        PassoComAnterior += processosOrdenados[i].surtoP
-        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], PassoComAnterior);
+        passoComAnterior += processosOrdenados[i].surtoP
+        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], passoComAnterior);
         processosOrdenados[i].surtoP = 0;
       } else {
         somatorioTemposSurto -= quantum;
         processosOrdenados[i].surtoP -= quantum;
-        PassoComAnterior += quantum;
-        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], PassoComAnterior);
+        passoComAnterior += quantum;
+        adicionarValor(listaExecucaoProcessos, processosOrdenados[i], passoComAnterior);
       }
+
+      console.log("rodada " + i + ": " + passoComAnterior)
     }
   }
 
@@ -188,149 +272,8 @@ function renderProcessos(numProcesso, final) {
 }
 
 function mostraTimeline() {
-  const timelineSection = document.querySelector('.timeline');
   timelineSection.style.display = 'block';
 }
 
 
-
-
-
-
-
-(function () {
-  // VARIABLES
-  const timeline = document.querySelector(".timeline ol"),
-    elH = document.querySelectorAll(".timeline li > div"),
-    arrows = document.querySelectorAll(".timeline .arrows .arrow"),
-    arrowPrev = document.querySelector(".timeline .arrows .arrow__prev"),
-    arrowNext = document.querySelector(".timeline .arrows .arrow__next"),
-    firstItem = document.querySelector(".timeline li:first-child"),
-    lastItem = document.querySelector(".timeline li:last-child"),
-    xScrolling = 280,
-    disabledClass = "disabled";
-
-  // START
-  window.addEventListener("load", init);
-
-  function init() {
-    setEqualHeights(elH);
-    animateTl(xScrolling, arrows, timeline);
-    setSwipeFn(timeline, arrowPrev, arrowNext);
-    setKeyboardFn(arrowPrev, arrowNext);
-  }
-
-  // SET EQUAL HEIGHTS
-  function setEqualHeights(el) {
-    let counter = 0;
-    for (let i = 0; i < el.length; i++) {
-      const singleHeight = el[i].offsetHeight;
-
-      if (counter < singleHeight) {
-        counter = singleHeight;
-      }
-    }
-
-    for (let i = 0; i < el.length; i++) {
-      el[i].style.height = `${counter}px`;
-    }
-  }
-
-  // CHECK IF AN ELEMENT IS IN VIEWPORT
-  // http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
-  function isElementInViewport(el) {
-    const rect = el.getBoundingClientRect();
-    return (
-      rect.top >= 0 &&
-      rect.left >= 0 &&
-      rect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-  }
-
-  // SET STATE OF PREV/NEXT ARROWS
-  function setBtnState(el, flag = true) {
-    if (flag) {
-      el.classList.add(disabledClass);
-    } else {
-      if (el.classList.contains(disabledClass)) {
-        el.classList.remove(disabledClass);
-      }
-      el.disabled = false;
-    }
-  }
-
-  // ANIMATE TIMELINE
-  function animateTl(scrolling, el, tl) {
-    let counter = 0;
-    for (let i = 0; i < el.length; i++) {
-      el[i].addEventListener("click", function () {
-        if (!arrowPrev.disabled) {
-          arrowPrev.disabled = true;
-        }
-        if (!arrowNext.disabled) {
-          arrowNext.disabled = true;
-        }
-        const sign = this.classList.contains("arrow__prev") ? "" : "-";
-
-
-        if (counter === 0) {
-          tl.style.transform = `translateX(-${scrolling}px)`;
-        } else {
-          const tlStyle = getComputedStyle(tl);
-          // add more browser prefixes if needed here
-          const tlTransformWebkit = tlStyle.getPropertyValue("-webkit-transform");
-          const tlTransformMoz = tlStyle.getPropertyValue("-moz-transform");
-          const tlTransform = tlStyle.getPropertyValue("transform");
-
-          const transformValue = tlTransformWebkit || tlTransformMoz || tlTransform;
-
-
-          const values = parseInt(transformValue.split(",")[4]) + parseInt(`${sign}${scrolling}`);
-
-          tl.style.transform = `translateX(${values}px)`;
-          tl.style.webkitTransform = `translateX(${values}px)`; // Para Safari
-          tl.style.mozTransform = `translateX(${values}px)`; // Para Firefox
-        }
-
-        setTimeout(() => {
-          isElementInViewport(firstItem)
-            ? setBtnState(arrowPrev)
-            : setBtnState(arrowPrev, false);
-          isElementInViewport(lastItem)
-            ? setBtnState(arrowNext)
-            : setBtnState(arrowNext, false);
-        }, 1100);
-
-        counter++;
-      });
-    }
-  }
-
-  // ADD SWIPE SUPPORT FOR TOUCH DEVICES
-  function setSwipeFn(tl, prev, next) {
-    const hammer = new Hammer(tl);
-    hammer.on("swipeleft", () => next.click());
-    hammer.on("swiperight", () => prev.click());
-  }
-
-  // ADD BASIC KEYBOARD FUNCTIONALITY
-  function setKeyboardFn(prev, next) {
-    document.addEventListener("keydown", (e) => {
-      if (e.which === 37 || e.which === 39) {
-        const timelineOfTop = timeline.offsetTop;
-        const y = window.pageYOffset;
-        if (timelineOfTop !== y) {
-          window.scrollTo(0, timelineOfTop);
-        }
-        if (e.which === 37) {
-          prev.click();
-        } else if (e.which === 39) {
-          next.click();
-        }
-      }
-    });
-  }
-})();
 
